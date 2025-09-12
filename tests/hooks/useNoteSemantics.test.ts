@@ -65,7 +65,7 @@ describe('useNoteSemantics', () => {
 
   it('should correctly identify a real note', () => {
     const realHtml =
-      '<p><span class="widget property" data-key="project" data-operator="is" data-values=\'["Notention"]\'>[project:is:Notention]</span></p>';
+      '<p><span class="widget property" data-key="project" data-operator="is" data-values=\'["MonkeyBusiness"]\'>[project:is:MonkeyBusiness]</span></p>';
     const { result } = renderHook(() => useNoteSemantics(realHtml));
     expect(result.current.isImaginary).toBe(false);
   });

@@ -2,6 +2,7 @@ import React from 'react';
 import type { View } from '../types';
 import {
   ChatIcon,
+  CubeIcon,
   MapIcon,
   NetworkIcon,
   NoteIcon,
@@ -45,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ onNewNote }) => {
   const { activeView, setActiveView } = useView();
   const navItems: { view: View; label: string; icon: React.ReactElement }[] = [
     { view: 'notes', label: 'Notes', icon: <NoteIcon /> },
+    { view: 'marketplace', label: 'Marketplace', icon: <CubeIcon /> },
     { view: 'map', label: 'Map', icon: <MapIcon /> },
     { view: 'network', label: 'Network', icon: <NetworkIcon /> },
     { view: 'chat', label: 'Chat', icon: <ChatIcon /> },
@@ -55,10 +57,11 @@ export const Header: React.FC<HeaderProps> = ({ onNewNote }) => {
     <header className="flex-shrink-0 bg-gray-900 h-16 px-4 flex items-center justify-between border-b border-gray-700/50">
       {/* Left Section */}
       <div className="flex items-center gap-4">
+        <h1 className="text-xl font-bold text-white">MonkeyBusiness</h1>
         <button
           onClick={onNewNote}
           title="New Note"
-          className="flex items-center gap-2 px-3 py-1.5 transition-colors rounded-lg bg-blue-600 text-white hover:bg-blue-700 ml-4"
+          className="flex items-center gap-2 px-3 py-1.5 transition-colors rounded-lg bg-blue-600 text-white hover:bg-blue-700"
         >
           <PlusIcon className="h-5 w-5" />
         </button>

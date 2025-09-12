@@ -17,7 +17,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [settings, setSettings, settingsLoading] = useLocalForage<AppSettings>(
-    'notention-settings',
+    'monkey-business-settings',
     {
       aiEnabled: false,
       theme: 'dark',

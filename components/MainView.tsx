@@ -9,6 +9,7 @@ import { MapView } from './views/MapView';
 import { NetworkView } from './views/NetworkView';
 import { ChatView } from './views/ChatView';
 import { SettingsView } from './views/SettingsView';
+import { MarketplaceView } from './views/MarketplaceView';
 
 export const MainView: React.FC = () => {
   const { activeView } = useView();
@@ -26,6 +27,8 @@ export const MainView: React.FC = () => {
   switch (activeView) {
     case 'notes':
       return <NotesView />;
+    case 'marketplace':
+      return <MarketplaceView />;
     case 'ontology':
       return <OntologyView />;
     case 'map':

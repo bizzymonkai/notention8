@@ -70,6 +70,7 @@ export interface Contact {
 
 export type View =
   | 'notes'
+  | 'marketplace'
   | 'ontology'
   | 'network'
   | 'chat'

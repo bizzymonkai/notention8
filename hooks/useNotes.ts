@@ -3,7 +3,7 @@ import type { Note } from '../types';
 
 export const useNotes = () => {
   const [notes, setNotes, notesLoading] = useLocalForage<Note[]>(
-    'notention-notes',
+    'monkey-business-notes',
     []
   );
 

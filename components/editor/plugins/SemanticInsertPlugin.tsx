@@ -78,7 +78,24 @@ export const SemanticInsertModalProvider: React.FC<{ editorApi: EditorApi }> = (
         description: t.description,
         type: 'tag',
         action: () => {
-          const html = `<span class="widget tag" contenteditable="false" data-tag="${t.label}">#${t.label}</span>&nbsp;`;
+          let html = `<span class="widget tag" contenteditable="false" data-tag="${t.label}">#${t.label}</span>&nbsp;`;
+
+          // If the tag is 'Product', automatically add product properties and an 'offer' tag
+          if (t.label.toLowerCase() === 'product') {
+            html += `<span class="widget tag" contenteditable="false" data-tag="offer">#offer</span>&nbsp;`;
+            const productNode = editorApi.getSettings().ontology
+              .find(o => o.id === 'commerce')?.children?.find(c => c.id === 'product');
+
+            if (productNode?.attributes) {
+              const propertiesHtml = Object.keys(productNode.attributes)
+                .map(key => {
+                  return `<span class="widget property" contenteditable="false" data-key="${key}" data-operator="is" data-values='[""]'>[${key}:is:""]</span>`;
+                })
+                .join('&nbsp;');
+              html += `<div>${propertiesHtml}</div>`;
+            }
+          }
+
           editorApi.insertHtml(html);
         },
       }));

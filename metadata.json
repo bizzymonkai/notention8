@@ -1,6 +1,6 @@
 {
-  "name": "Notention 4",
-  "description": "Decentralized note-taking and semantic matching network.  A lightweight, client-side Progressive Web App (PWA).  Enables users to capture, organize, and share notes with embedded semantic structure. Powered by local-first storage and optional AI enhancements.",
+  "name": "MonkeyBusiness",
+  "description": "A semantic p2p e-commerce prototype app. A lightweight, client-side Progressive Web App (PWA). Enables users to create and discover product offers and requests. Powered by local-first storage and a decentralized network.",
   "requestFramePermissions": [],
   "prompt": ""
 }
