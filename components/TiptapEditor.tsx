@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import type { Note } from '../types';
 import { TiptapToolbar } from './TiptapToolbar';
+import { sanitizeHTML } from '../utils/sanitize';
 
 const SAVE_DEBOUNCE_MS = 1000;
 
@@ -25,7 +26,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
 
   const editor = useEditor({
     extensions: [StarterKit],
-    content: note.content,
+    content: sanitizeHTML(note.content),
     editorProps: {
       attributes: {
         class: 'prose prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
@@ -65,7 +66,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
       setViewMode('code');
     } else {
       // Switching to rich view, update editor from our local state
-      editor.commands.setContent(currentContent, false);
+      editor.commands.setContent(sanitizeHTML(currentContent), false);
       setViewMode('rich');
     }
   };
