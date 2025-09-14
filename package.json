@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.12.0",
+    "@tiptap/react": "^3.4.2",
+    "@tiptap/starter-kit": "^3.4.2",
     "dompurify": "^3.2.6",
     "leaflet": "1.9.4",
     "localforage": "^1.10.0",
