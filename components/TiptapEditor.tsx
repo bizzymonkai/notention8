@@ -6,6 +6,14 @@ import { TiptapToolbar } from './TiptapToolbar';
 
 const SAVE_DEBOUNCE_MS = 1000;
 
+const formatHtmlForDisplay = (html: string) => {
+  if (!html) return '';
+  // Add a newline before any block-level tag
+  const blockTags = ['p', 'h1', 'h2', 'h3', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre'];
+  const regex = new RegExp(`(<(?:${blockTags.join('|')})[^>]*>)`, 'g');
+  return html.replace(regex, '\n$1').trim();
+};
+
 interface TiptapEditorProps {
   note: Note;
   onSave: (updatedContent: string) => void;
@@ -63,8 +71,9 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCurrentContent(e.target.value);
-    // The debounced save effect will handle saving.
+    // Remove the display-only newlines before updating the state
+    const rawHtml = e.target.value.replace(/\n/g, '');
+    setCurrentContent(rawHtml);
   };
 
   return (
@@ -76,7 +85,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
         ) : (
           <textarea
             className="w-full h-full p-4 bg-gray-900 text-gray-300 font-mono focus:outline-none resize-none"
-            value={currentContent}
+            value={formatHtmlForDisplay(currentContent)}
             onChange={handleCodeChange}
             placeholder="Enter HTML..."
           />
