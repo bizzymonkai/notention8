@@ -44,17 +44,9 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
     };
   }, [currentContent, onSave, note.content]);
 
-  // Ensure editor content is updated if the note prop changes
-  useEffect(() => {
-    if (!editor) return;
-
-    const isOutOfSync = editor.getHTML() !== note.content;
-    if (isOutOfSync) {
-      editor.commands.setContent(note.content, false);
-      // Also update our local content state to prevent an unnecessary save trigger
-      setCurrentContent(note.content);
-    }
-  }, [note, editor]);
+  // The `key` prop on this component in EditorManager.tsx handles re-mounting
+  // with fresh state when the note ID changes. This is the correct way to handle
+  // switching notes. A useEffect to sync content is not needed and causes the cursor bug.
 
   const toggleViewMode = () => {
     if (!editor) return;
