@@ -25,10 +25,23 @@ const processInputRules = (editorApi: EditorApi): boolean => {
     return true;
   }
 
-  // Rule: [key:value]
-  const propMatch = textBeforeCaret.match(/(\[([^:\]]+?):([^\]]*?)\])$/);
+  // Rule: #tag
+  const tagMatch = textBeforeCaret.match(/(#([a-zA-Z0-9_-]+)\s)$/);
+  if (tagMatch) {
+    const [fullMatch, , tagName] = tagMatch;
+    const offsetToReplace = fullMatch.length;
+    range.setStart(container, range.startOffset - offsetToReplace);
+    range.deleteContents();
+
+    const htmlToInsert = `<span class="widget tag" contenteditable="false" data-tag="${tagName}">#${tagName}</span>&nbsp;`;
+    editorApi.insertHtml(htmlToInsert);
+    return true;
+  }
+
+  // Rule: [key:operator:value]
+  const propMatch = textBeforeCaret.match(/(\[([^:\]]+?):([^:\]]+?):([^\]]*?)\]\s)$/);
   if (propMatch) {
-    const [fullMatch, , key, value] = propMatch.map((s) => s || '');
+    const [fullMatch, , key, operator, valuesStr] = propMatch.map((s) => s || '');
     if (key.trim()) {
       const offsetToReplace = fullMatch.length;
       if (offsetToReplace > range.startOffset) return false;
@@ -37,15 +50,13 @@ const processInputRules = (editorApi: EditorApi): boolean => {
       range.deleteContents();
 
       const k = key.trim();
-      const v = value.trim();
-      const operator = 'is';
-      const values = [v];
+      const op = operator.trim();
+      const values = valuesStr.split(',').map(s => s.trim());
 
-      const htmlToInsert = `<span class="widget property" contenteditable="false" data-key="${k}" data-operator="${operator}" data-values='${JSON.stringify(values)}'>${formatPropertyForDisplay(k, operator, values)}</span>&nbsp;`;
+      const htmlToInsert = `<span class="widget property" contenteditable="false" data-key="${k}" data-operator="${op}" data-values='${JSON.stringify(values)}'>${formatPropertyForDisplay(k, op, values)}</span>&nbsp;`;
 
       editorApi.insertHtml(htmlToInsert);
-
-      return true; // Event was handled
+      return true;
     }
   }
   return false;

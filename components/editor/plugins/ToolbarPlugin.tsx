@@ -3,6 +3,7 @@ import type { EditorApi, EditorPlugin } from '../../../types';
 import {
   BoldIcon,
   CodeBlockIcon,
+  CodeBracketsIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -25,6 +26,8 @@ export const ToolbarComponent: React.FC<ToolbarPluginProps> = ({
   const [activeButtons, setActiveButtons] = useState<Record<string, boolean>>(
     {}
   );
+  // Separate state for view mode to trigger re-renders correctly.
+  const [isCodeView, setIsCodeView] = useState(editorApi.getViewMode() === 'code');
 
   const updateActiveStates = useCallback(() => {
     const parent = editorApi.getSelectionParent();
@@ -41,27 +44,39 @@ export const ToolbarComponent: React.FC<ToolbarPluginProps> = ({
       blockquote: parent?.closest('blockquote') !== null,
       pre: parent?.closest('pre') !== null,
     });
+    setIsCodeView(editorApi.getViewMode() === 'code');
   }, [editorApi]);
 
   useEffect(() => {
     const editor = editorApi.editorRef.current;
     const handleSelectionChange = () => updateActiveStates();
 
+    // Listen for a custom event that signals view mode change
+    const handleViewModeChange = () => updateActiveStates();
+
     document.addEventListener('selectionchange', handleSelectionChange);
     editor?.addEventListener('focus', handleSelectionChange);
-    editor?.addEventListener('keyup', handleSelectionChange); // For block changes
-    editor?.addEventListener('mouseup', handleSelectionChange); // For mouse-based selection
+    editor?.addEventListener('keyup', handleSelectionChange);
+    editor?.addEventListener('mouseup', handleSelectionChange);
+    window.addEventListener('viewModeChanged', handleViewModeChange);
 
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
       editor?.removeEventListener('focus', handleSelectionChange);
       editor?.removeEventListener('keyup', handleSelectionChange);
       editor?.removeEventListener('mouseup', handleSelectionChange);
+      window.removeEventListener('viewModeChanged', handleViewModeChange);
     };
   }, [editorApi.editorRef, updateActiveStates]);
 
+  const handleToggleViewMode = () => {
+    editorApi.toggleViewMode();
+    // Dispatch a custom event to notify other components (like this one)
+    window.dispatchEvent(new CustomEvent('viewModeChanged'));
+  };
+
   const buttonClass = (isActive: boolean) =>
-    `p-2 rounded-md transition-colors ${isActive ? 'bg-gray-600 text-white' : 'hover:bg-gray-700/80 text-gray-400 hover:text-gray-200'}`;
+    `p-2 rounded-md transition-colors ${isActive ? 'bg-blue-500 text-white' : 'hover:bg-gray-700/80 text-gray-400 hover:text-gray-200'}`;
 
   return (
     <div className="flex-shrink-0 p-2 border-b border-gray-700/50 flex items-center flex-wrap gap-1">
@@ -150,6 +165,16 @@ export const ToolbarComponent: React.FC<ToolbarPluginProps> = ({
         title="Horizontal Rule"
       >
         <HorizontalRuleIcon className="h-5 w-5" />
+      </button>
+
+      <div className="flex-grow"></div>
+
+      <button
+        onClick={handleToggleViewMode}
+        className={buttonClass(isCodeView)}
+        title="Toggle Code View"
+      >
+        <CodeBracketsIcon className="h-5 w-5" />
       </button>
     </div>
   );

@@ -92,34 +92,14 @@ const InsertMenuProvider: React.FC<{ editorApi: EditorApi }> = ({ editorApi }) =
     let htmlToInsert = '';
 
     if (item.type === 'tag') {
-      htmlToInsert = `<span class="widget tag" contenteditable="false" data-tag="${item.label}">#${item.label}</span>&nbsp;`;
-      editorApi.insertHtml(htmlToInsert);
+      const textToInsert = `#${item.label} `;
+      editorApi.insertHtml(textToInsert); // Let input rules handle the rest
     } else if (item.type === 'property') {
-      // Handle creating a property from selected text
-      if (context.selectedValue && context.mode === 'property') {
-        const values = [context.selectedValue];
-        const operator = 'is';
-        const formatted = formatPropertyForDisplay(item.label, operator, values);
-        htmlToInsert = `<span class="widget property" contenteditable="false" data-key="${item.label}" data-operator="${operator}" data-values='${JSON.stringify(
-          values
-        )}'>${formatted}</span>&nbsp;`;
-        // This will replace the selected text
-        editorApi.insertHtml(htmlToInsert);
-      } else {
-        // Handle inserting an empty property
-        const widgetId = `widget-${crypto.randomUUID()}`;
-        htmlToInsert = `<span id="${widgetId}" class="widget property" contenteditable="false" data-key="${item.label}" data-operator="is" data-values='[""]'>[${item.label}:is:""]</span>&nbsp;`;
-
-        editorApi.insertHtml(htmlToInsert, () => {
-          const editor = editorApi.editorRef.current;
-          if (editor) {
-            const newWidget = editor.querySelector<HTMLElement>(`#${widgetId}`);
-            if (newWidget) {
-              editorApi.setEditingWidget(newWidget);
-            }
-          }
-        });
-      }
+      const key = item.label;
+      const operator = 'is';
+      const value = context.selectedValue && context.mode === 'property' ? context.selectedValue : '""';
+      const textToInsert = `[${key}:${operator}:${value}] `;
+      editorApi.insertHtml(textToInsert); // Let input rules handle the rest
     } else if (item.type === 'template') {
       const template = indexedOntology.allTemplates.find(
         (t) => t.id === item.id.replace('template-', '')
@@ -132,18 +112,17 @@ const InsertMenuProvider: React.FC<{ editorApi: EditorApi }> = ({ editorApi }) =
   };
 
   const handleTemplateSave = (properties: Property[]) => {
-    const htmlToInsert = properties
+    const textToInsert = properties
       .map((prop) => {
         const { key, operator, values } = prop;
-        const formatted = formatPropertyForDisplay(key, operator, values);
-        return `<span class="widget property" contenteditable="false" data-key="${key}" data-operator="${operator}" data-values='${JSON.stringify(
-          values
-        )}'>${formatted}</span>`;
+        // Join multiple values with a comma, handle empty values
+        const valueStr = values.length > 0 ? values.join(',') : '""';
+        return `[${key}:${operator}:${valueStr}]`;
       })
       .join(' ');
 
-    if (htmlToInsert) {
-      editorApi.insertHtml(htmlToInsert + '&nbsp;');
+    if (textToInsert) {
+      editorApi.insertHtml(textToInsert + ' '); // Let input rules handle the rest
     }
     setTemplateEditorOpen(false);
     setSelectedTemplate(null);

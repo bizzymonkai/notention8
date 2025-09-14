@@ -12,8 +12,10 @@ import {
   editorReducer,
   type EditorState,
   type EditorAction,
+  type ViewMode,
 } from './reducers/editorReducer';
 import { useEditorEvents } from './useEditorEvents';
+import { htmlToPlain, plainToHtml } from '../utils/noteSemantics';
 
 const AUTO_SAVE_DEBOUNCE_MS = 1000;
 
@@ -119,6 +121,21 @@ const createEditorApi = (
     return acc;
   }, {} as { [pluginId: string]: unknown });
 
+  const toggleViewMode = () => {
+    const currentContent = state.content;
+    const newMode: ViewMode = state.viewMode === 'rich' ? 'code' : 'rich';
+
+    let newContent = '';
+    if (newMode === 'code') {
+      newContent = htmlToPlain(currentContent);
+    } else {
+      newContent = plainToHtml(currentContent);
+    }
+
+    dispatch({ type: 'SET_CONTENT', payload: newContent });
+    dispatch({ type: 'SET_VIEW_MODE', payload: newMode });
+  };
+
   return {
     editorRef,
     ...createCommandApi(focus),
@@ -127,6 +144,8 @@ const createEditorApi = (
     ...createWidgetApi(dispatch, state),
     getSettings: () => settings,
     getSelectionParent: Commands.getSelectionParent,
+    toggleViewMode,
+    getViewMode: () => state.viewMode,
     plugins: pluginApis,
   };
 };
@@ -143,6 +162,7 @@ export const useEditor = (
   const initialState: EditorState = {
     content: note.content,
     editingWidget: null,
+    viewMode: 'rich',
   };
 
   const [state, dispatch] = useReducer(editorReducer, initialState);
@@ -208,6 +228,7 @@ export const useEditor = (
   return {
     editorRef,
     content: state.content,
+    viewMode: state.viewMode,
     handleInput,
     handleClick,
     handleKeyDown,
