@@ -2,7 +2,7 @@ import React from 'react';
 import { useNotes } from '../contexts/NotesContext';
 import { useView } from '../contexts/ViewContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { EditorManager } from '../EditorManager';
+import { DebugEditor } from '../DebugEditor';
 import { CubeTransparentIcon } from '../icons';
 
 interface PlaceholderViewProps {
@@ -60,12 +60,6 @@ export const NotesView: React.FC = () => {
   }
 
   return (
-    <EditorManager
-      key={selectedNote.id}
-      note={selectedNote}
-      onSave={updateNote}
-      onDelete={handleDeleteNote}
-      settings={settings}
-    />
+    <DebugEditor />
   );
 };
