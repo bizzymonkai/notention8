@@ -16,65 +16,47 @@ const formatHtmlForDisplay = (html: string) => {
 };
 
 interface TiptapEditorProps {
-  note: Note;
-  onSave: (updatedContent: string) => void;
+  content: string;
+  onChange: (updatedContent: string) => void;
 }
 
-export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
+export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
   const [viewMode, setViewMode] = useState<'rich' | 'code'>('rich');
-  const [currentContent, setCurrentContent] = useState(note.content);
 
   const editor = useEditor({
     extensions: [StarterKit],
-    content: sanitizeHTML(note.content),
+    content: sanitizeHTML(content),
     editorProps: {
       attributes: {
         class: 'prose prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
     onUpdate: ({ editor }) => {
-      setCurrentContent(editor.getHTML());
+      onChange(editor.getHTML());
     },
   });
 
-  // Debounced save effect
+  // Effect to update editor content when the parent's content changes,
+  // but only if it's different from the editor's current state.
+  // This is necessary for the initial load and for syncing after a save.
   useEffect(() => {
-    // Don't save on initial mount or if content is unchanged
-    if (currentContent === note.content) {
-      return;
+    if (editor && editor.getHTML() !== content) {
+      editor.commands.setContent(sanitizeHTML(content), false);
     }
-
-    const handler = setTimeout(() => {
-      onSave(currentContent);
-    }, SAVE_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [currentContent, onSave, note.content]);
+  }, [content, editor]);
 
   // The `key` prop on this component in EditorManager.tsx handles re-mounting
   // with fresh state when the note ID changes. This is the correct way to handle
-  // switching notes. A useEffect to sync content is not needed and causes the cursor bug.
+  // switching notes.
 
   const toggleViewMode = () => {
-    if (!editor) return;
-
-    if (viewMode === 'rich') {
-      // Switching to code view. The `currentContent` is already up-to-date
-      // from the `onUpdate` handler or the initial state.
-      setViewMode('code');
-    } else {
-      // Switching to rich view, update editor from our local state
-      editor.commands.setContent(sanitizeHTML(currentContent), false);
-      setViewMode('rich');
-    }
+    setViewMode(viewMode === 'rich' ? 'code' : 'rich');
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Remove the display-only newlines before updating the state
     const rawHtml = e.target.value.replace(/\n/g, '');
-    setCurrentContent(rawHtml);
+    onChange(rawHtml);
   };
 
   return (
@@ -86,7 +68,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
         ) : (
           <textarea
             className="w-full h-full p-4 bg-gray-900 text-gray-300 font-mono focus:outline-none resize-none"
-            value={formatHtmlForDisplay(currentContent)}
+            value={formatHtmlForDisplay(content)}
             onChange={handleCodeChange}
             placeholder="Enter HTML..."
           />
