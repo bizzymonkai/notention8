@@ -40,7 +40,7 @@ export const EditorManager: React.FC<EditorManagerProps> = ({
     };
   }, [dirtyNote, onSave, note]);
 
-  const handleContentChange = (updatedContent: string) => {
+  const handleContentSave = (updatedContent: string) => {
     setDirtyNote((prevNote) => ({
       ...prevNote,
       content: updatedContent,
@@ -67,8 +67,8 @@ export const EditorManager: React.FC<EditorManagerProps> = ({
       </div>
       <TiptapEditor
         key={note.id} // This is crucial to force a re-mount when the note changes
-        content={dirtyNote.content}
-        onChange={handleContentChange}
+        note={dirtyNote}
+        onSave={handleContentSave}
       />
     </div>
   );

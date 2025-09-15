@@ -9,54 +9,68 @@ const SAVE_DEBOUNCE_MS = 1000;
 
 const formatHtmlForDisplay = (html: string) => {
   if (!html) return '';
-  // Add a newline before any block-level tag
   const blockTags = ['p', 'h1', 'h2', 'h3', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre'];
   const regex = new RegExp(`(<(?:${blockTags.join('|')})[^>]*>)`, 'g');
   return html.replace(regex, '\n$1').trim();
 };
 
 interface TiptapEditorProps {
-  content: string;
-  onChange: (updatedContent: string) => void;
+  note: Note;
+  onSave: (updatedContent: string) => void;
 }
 
-export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
+export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
   const [viewMode, setViewMode] = useState<'rich' | 'code'>('rich');
+  const [localContent, setLocalContent] = useState(note.content);
 
   const editor = useEditor({
     extensions: [StarterKit],
-    content: sanitizeHTML(content),
+    content: sanitizeHTML(note.content),
     editorProps: {
       attributes: {
         class: 'prose prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none h-full',
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      setLocalContent(editor.getHTML());
     },
   });
 
-  // Effect to update editor content when the parent's content changes,
-  // but only if it's different from the editor's current state.
-  // This is necessary for the initial load and for syncing after a save.
+  // Debounced save effect
   useEffect(() => {
-    if (editor && editor.getHTML() !== content) {
-      editor.commands.setContent(sanitizeHTML(content), false);
+    // Do not save if the content is the same as the initial prop content
+    if (localContent === note.content) {
+      return;
     }
-  }, [content, editor]);
+    const handler = setTimeout(() => {
+      onSave(localContent);
+    }, SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(handler);
+  }, [localContent, note.content, onSave]);
 
-  // The `key` prop on this component in EditorManager.tsx handles re-mounting
-  // with fresh state when the note ID changes. This is the correct way to handle
-  // switching notes.
+  // Effect to update editor when the note prop itself changes (i.e., new note selected)
+  // The `key` prop in the parent handles the full remount, but we also need to sync state.
+  useEffect(() => {
+    setLocalContent(note.content);
+    if (editor && editor.getHTML() !== note.content) {
+      editor.commands.setContent(sanitizeHTML(note.content), false);
+    }
+  }, [note, editor]);
+
 
   const toggleViewMode = () => {
+    if (viewMode === 'code') {
+      // When switching back to rich view, update the editor with the code content
+      if (editor && editor.getHTML() !== localContent) {
+        editor.commands.setContent(sanitizeHTML(localContent), false);
+      }
+    }
     setViewMode(viewMode === 'rich' ? 'code' : 'rich');
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Remove the display-only newlines before updating the state
     const rawHtml = e.target.value.replace(/\n/g, '');
-    onChange(rawHtml);
+    setLocalContent(rawHtml);
   };
 
   return (
@@ -68,7 +82,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange })
         ) : (
           <textarea
             className="w-full h-full p-4 bg-gray-900 text-gray-300 font-mono focus:outline-none resize-none"
-            value={formatHtmlForDisplay(content)}
+            value={formatHtmlForDisplay(localContent)}
             onChange={handleCodeChange}
             placeholder="Enter HTML..."
           />
