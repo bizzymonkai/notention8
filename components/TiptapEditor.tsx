@@ -5,8 +5,6 @@ import type { Note } from '../types';
 import { TiptapToolbar } from './TiptapToolbar';
 import { sanitizeHTML } from '../utils/sanitize';
 
-const SAVE_DEBOUNCE_MS = 1000;
-
 const formatHtmlForDisplay = (html: string) => {
   if (!html) return '';
   const blockTags = ['p', 'h1', 'h2', 'h3', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre'];
@@ -38,29 +36,35 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ note, onSave }) => {
 
   // Debounced save effect
   useEffect(() => {
-    // Do not save if the content is the same as the initial prop content
-    if (localContent === note.content) {
-      return;
-    }
+    if (localContent === note.content) return;
     const handler = setTimeout(() => {
       onSave(localContent);
-    }, SAVE_DEBOUNCE_MS);
+    }, 1000);
     return () => clearTimeout(handler);
   }, [localContent, note.content, onSave]);
 
-  // Effect to update editor when the note prop itself changes (i.e., new note selected)
-  // The `key` prop in the parent handles the full remount, but we also need to sync state.
+  // Sync content from parent, but only if the editor is not focused.
+  // This prevents the cursor from jumping during typing.
   useEffect(() => {
-    setLocalContent(note.content);
-    if (editor && editor.getHTML() !== note.content) {
+    if (editor && !editor.isFocused) {
+      const isDifferent = editor.getHTML() !== note.content;
+      if (isDifferent) {
+        editor.commands.setContent(sanitizeHTML(note.content), false);
+      }
+    }
+  }, [note.content, editor]);
+
+  // Also sync when the note ID changes to load a new note
+  useEffect(() => {
+    if(editor) {
+      setLocalContent(note.content);
       editor.commands.setContent(sanitizeHTML(note.content), false);
     }
-  }, [note, editor]);
+  }, [note.id, editor]);
 
 
   const toggleViewMode = () => {
     if (viewMode === 'code') {
-      // When switching back to rich view, update the editor with the code content
       if (editor && editor.getHTML() !== localContent) {
         editor.commands.setContent(sanitizeHTML(localContent), false);
       }
